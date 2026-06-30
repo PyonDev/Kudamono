@@ -12,7 +12,7 @@ services:
 
   backend:
     build:
-      context: ./kudamono-service
+      context: /kudamono-service
       dockerfile: Dockerfile
     container_name: kudamono-service
     restart: always
@@ -25,7 +25,7 @@ services:
 
   frontend:
     build:
-      context: ./kudamono-ui
+      context: /kudamono-ui
       dockerfile: Dockerfile
     container_name: kudamono-ui
     restart: always
