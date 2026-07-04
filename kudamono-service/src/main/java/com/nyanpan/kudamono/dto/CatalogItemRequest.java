@@ -1,33 +1,13 @@
-package com.nyanpan.kudamono.model;
+package com.nyanpan.kudamono.dto;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+public class CatalogItemRequest {
+    public String name;
+    public String description;
+    public String imageUrl;
+    public String category;
+    public String source;
 
-@Document(collection = "reviews")
-public class Review {
-    @Id
-    private String id;
-
-    private String name;
-    private String description;
-    private String imageUrl;
-    private String category;
-    private String source;
-
-    public Review() {
-    }
-
-    public Review(String name, String description, String imageUrl, String category, String source) {
-        this.name = name;
-        this.description = description;
-        this.imageUrl = imageUrl;
-        this.category = category;
-        this.source = source;
-    }
-
-    public String getId() {
-        return id;
-    }
+    public CatalogItemRequest() {}
 
     public String getName() {
         return name;

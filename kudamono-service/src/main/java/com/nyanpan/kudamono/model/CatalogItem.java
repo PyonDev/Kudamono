@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "catalog_items")
 public class CatalogItem {
     @Id
-    private int id;
+    private String id;
 
     private String name;
     private String description;
@@ -25,7 +25,7 @@ public class CatalogItem {
         this.source = source;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 

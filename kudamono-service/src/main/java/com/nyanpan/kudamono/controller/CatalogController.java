@@ -5,10 +5,12 @@ import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nyanpan.kudamono.model.CatalogItem;
+import com.nyanpan.kudamono.dto.CatalogItemRequest;
+import com.nyanpan.kudamono.dto.CatalogItemResponse;
 import com.nyanpan.kudamono.service.CatalogService;
 
 @RestController // We handle HTTP REST
@@ -22,12 +24,12 @@ public class CatalogController {
     }
 
     @GetMapping
-    public List<CatalogItem> getAllCatalogItems() {
+    public List<CatalogItemResponse> getAllCatalogItems() {
         return catalogService.getAllCatalogItems();
     }
 
     @PostMapping
-    public CatalogItem createCatalogItem(CatalogItem catalogItem) {
-        return catalogService.saveCatalogItem(catalogItem);
+    public CatalogItemResponse createItem(@RequestBody CatalogItemRequest request) {
+        return catalogService.saveCatalogItem(request);
     }
 }
