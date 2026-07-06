@@ -1,0 +1,223 @@
+'use client';
+import { useState, useMemo } from 'react';
+import { MOCK_CHARACTERS, AnimeCharacter } from '../data/mockAnime';
+import { menuItems } from '../data/const';
+
+export default function BrowseCharacters() {
+  const [characters] = useState<AnimeCharacter[]>(MOCK_CHARACTERS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const ITEMS_PER_PAGE = 8;
+
+  const allUniqueTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    characters.forEach(char => char.tags.forEach(t => tagsSet.add(t)));
+    return Array.from(tagsSet).sort();
+  }, [characters]);
+
+  const filteredCharacters = useMemo(() => {
+    return characters.filter(char => {
+      const matchesSearch = searchQuery.trim() === '' || 
+        char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        char.originSeries.toLowerCase().includes(searchQuery.toLowerCase());
+        
+      const matchesTag = !selectedTag || char.tags.includes(selectedTag);
+      
+      return matchesSearch && matchesTag;
+    });
+  }, [characters, searchQuery, selectedTag]);
+
+  const totalPages = Math.ceil(filteredCharacters.length / ITEMS_PER_PAGE) || 1;
+  
+  const activePage = currentPage > totalPages ? totalPages : currentPage;
+
+  const paginatedCharacters = useMemo(() => {
+    const startIndex = (activePage - 1) * ITEMS_PER_PAGE;
+    return filteredCharacters.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredCharacters, activePage]);
+
+  const handleTagToggle = (tag: string) => {
+    setSelectedTag(prev => (prev === tag ? null : tag));
+    setCurrentPage(1);
+  };
+
+  return (
+    <div style={{ backgroundColor: '#12131a', color: '#e2e8f0', minHeight: '100vh', fontFamily: 'Segoe UI, Roboto, Helvetica, sans-serif' }}>
+      
+      <nav style={{ backgroundColor: '#1a1c24', borderBottom: '1px solid #2d313f', position: 'relative', zIndex: 100 }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', height: '60px', padding: '0 1.5rem' }}>
+          
+          <div style={{ fontWeight: 'bold', fontSize: '1.4rem', color: '#ff4757', marginRight: '3rem', cursor: 'pointer', letterSpacing: '0.5px' }}>
+            KUDAMONO
+          </div>
+
+          <div style={{ display: 'flex', gap: '1.5rem', flexGrow: 1 }}>
+            {Object.entries(menuItems).map(([title, options]) => (
+              <div 
+                key={title} 
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setActiveDropdown(title)}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <button style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.95rem', fontWeight: 500, cursor: 'pointer', padding: '10px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {title} <span style={{ fontSize: '0.7rem' }}>▼</span>
+                </button>
+
+                {activeDropdown === title && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '4px', minWidth: '180px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', padding: '0.5rem 0' }}>
+                    {options.map(option => (
+                      <a key={option} href="#" style={{ display: 'block', padding: '0.6rem 1.2rem', color: '#cbd5e1', textDecoration: 'none', fontSize: '0.88rem', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2d313f'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        {option}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
+            Total Database: <span style={{ color: '#ff4757', fontWeight: 'bold' }}>{characters.length}</span>
+          </div>
+        </div>
+      </nav>
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem 4rem', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '2rem' }}>
+        
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          
+          <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '1.25rem' }}>
+            <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Search</h3>
+            <input 
+              type="text"
+              placeholder="Name or series..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              style={{ width: '100%', padding: '0.6rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#fff', fontSize: '0.9rem', outline: 'none' }}
+            />
+          </div>
+
+          <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '0.95rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Filter by Tag</h3>
+              {selectedTag && (
+                <button onClick={() => setSelectedTag(null)} style={{ background: 'none', border: 'none', color: '#ff4757', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}>Clear</button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {allUniqueTags.map(tag => {
+                const isSelected = selectedTag === tag;
+                return (
+                  <div 
+                    key={tag}
+                    onClick={() => handleTagToggle(tag)}
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      padding: '0.5rem 0.75rem', 
+                      borderRadius: '4px', 
+                      fontSize: '0.88rem', 
+                      cursor: 'pointer',
+                      backgroundColor: isSelected ? '#ff4757' : '#13141c',
+                      color: isSelected ? '#fff' : '#cbd5e1',
+                      border: isSelected ? '1px solid #ff4757' : '1px solid #2d313f',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>{tag}</span>
+                    <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                      {characters.filter(c => c.tags.includes(tag)).length}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
+
+        <main>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', fontSize: '0.9rem', color: '#94a3b8' }}>
+            <div>
+              Showing <strong style={{ color: '#fff' }}>{filteredCharacters.length === 0 ? 0 : (activePage - 1) * ITEMS_PER_PAGE + 1}</strong> - <strong style={{ color: '#fff' }}>{Math.min(activePage * ITEMS_PER_PAGE, filteredCharacters.length)}</strong> of <strong style={{ color: '#ff4757' }}>{filteredCharacters.length}</strong> results
+            </div>
+          </div>
+
+          {paginatedCharacters.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              {paginatedCharacters.map(char => (
+                <div key={char.id} style={{ display: 'flex', gap: '1.2rem', padding: '1rem', border: '1px solid #2d313f', borderRadius: '8px', backgroundColor: '#1a1c24' }}>
+                  <img src={char.imageUrl} alt={char.name} style={{ width: '80px', height: '110px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #2d313f' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.15rem', color: '#ff4757' }}>{char.name}</h4>
+                    <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.75rem' }}>Series: <strong style={{ color: '#cbd5e1' }}>{char.originSeries}</strong></span>
+                    
+                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      {char.tags.map(t => (
+                        <span key={t} style={{ fontSize: '0.75rem', backgroundColor: '#1e293b', color: '#94a3b8', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '4rem 2rem', textAlign: 'center', color: '#64748b' }}>
+              No items match your active filters or text criteria. Try broadening your criteria.
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '2.5rem' }}>
+              
+              <button 
+                disabled={activePage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', color: activePage === 1 ? '#475569' : '#cbd5e1', padding: '0.5rem 1rem', borderRadius: '4px', cursor: activePage === 1 ? 'not-allowed' : 'pointer', fontSize: '0.9rem' }}
+              >
+                ◀ Previous
+              </button>
+
+              {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(pageNum => {
+                const isCurrent = pageNum === activePage;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    style={{ 
+                      backgroundColor: isCurrent ? '#ff4757' : '#1a1c24', 
+                      border: isCurrent ? '1px solid #ff4757' : '1px solid #2d313f', 
+                      color: isCurrent ? '#fff' : '#cbd5e1', 
+                      width: '38px', 
+                      height: '38px', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer', 
+                      fontSize: '0.9rem',
+                      fontWeight: isCurrent ? 'bold' : 'normal'
+                    }}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button 
+                disabled={activePage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', color: activePage === totalPages ? '#475569' : '#cbd5e1', padding: '0.5rem 1rem', borderRadius: '4px', cursor: activePage === totalPages ? 'not-allowed' : 'pointer', fontSize: '0.9rem' }}
+              >
+                Next ▶
+              </button>
+
+            </div>
+          )}
+
+        </main>
+      </div>
+    </div>
+  );
+}

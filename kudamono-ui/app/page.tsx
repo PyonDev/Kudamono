@@ -1,91 +1,195 @@
-"use client";
+/* eslint-disable @next/next/no-img-element */
+'use client';
+import { useState, useRef, useEffect } from 'react';
+import { MOCK_CHARACTERS, AnimeCharacter } from './data/mockAnime';
+import { menuItems } from './data/const';
+import Link from 'next/link';
 
-import { useState } from "react";
-import Link from "next/link";
+export default function Home() {
+  const [characters] = useState<AnimeCharacter[]>(MOCK_CHARACTERS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
-export default function LandingPage() {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const categories = [
-    { name: "Explore", href: "/content/explore" },
-  ];
+  const globalSearchResults = searchQuery.trim() === '' 
+    ? [] 
+    : characters.filter(char => {
+        const query = searchQuery.toLowerCase();
+        return (
+          char.name.toLowerCase().includes(query) ||
+          char.originSeries.toLowerCase().includes(query) ||
+          char.tags.some(t => t.toLowerCase().includes(query))
+        );
+      });
 
   return (
-    <div className="min-h-screen bg-green-100 text-slate-900 font-sans">
+    <div style={{ backgroundColor: '#12131a', color: '#e2e8f0', minHeight: '100vh', fontFamily: 'Segoe UI, Roboto, Helvetica, sans-serif' }}>
       
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-2xl font-bold tracking-tight text-indigo-600">
-                Kudamono
-              </Link>
-            </div>
+      <nav style={{ backgroundColor: '#1a1c24', borderBottom: '1px solid #2d313f', position: 'relative', zIndex: 100 }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', height: '60px', padding: '0 1.5rem' }}>
+          
+          <div style={{ fontWeight: 'bold', fontSize: '1.4rem', color: '#ff4757', marginRight: '3rem', cursor: 'pointer', letterSpacing: '0.5px' }}>
+            KUDAMONO
+          </div>
 
-            <div className="flex items-center space-x-4">
-              
-              <div className="relative inline-block text-left">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
-                  className="inline-flex justify-center items-center w-full rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-                >
-                  Browse Catalog
-                  <svg className="-mr-1 ml-2 h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+          <div style={{ display: 'flex', gap: '1.5rem', flexGrow: 1 }}>
+            {Object.entries(menuItems).map(([title, options]) => (
+              <div 
+                key={title} 
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setActiveDropdown(title)}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <button style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.95rem', fontWeight: 500, cursor: 'pointer', padding: '10px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {title} <span style={{ fontSize: '0.7rem' }}>▼</span>
                 </button>
 
-                {isDropdownOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-slate-100 focus:outline-none animate-fadeIn">
-                    <div className="py-1">
-                      {categories.map((category) => (
-                        <Link
-                          key={category.name}
-                          href={category.href}
-                          className="block px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-900 transition-colors"
-                        >
-                          {category.name}
+                {activeDropdown === title && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '4px', minWidth: '180px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', padding: '0.5rem 0' }}>
+                    {options.map(option => {
+                      const targetPath = option === 'All Characters' ? '/characters' : '#';
+                      return (
+                        <Link key={option} href={targetPath} style={{ display: 'block', padding: '0.6rem 1.2rem', color: '#cbd5e1', textDecoration: 'none', fontSize: '0.88rem', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2d313f'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                          {option}
                         </Link>
-                      ))}
-                    </div>
+                      );
+                     })}
                   </div>
                 )}
               </div>
+            ))}
+          </div>
 
-              <button className="bg-indigo-600 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
-                Sign In
-              </button>
-            </div>
-
+          <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
+            Database Entries: <span style={{ color: '#ff4757', fontWeight: 'bold' }}>{characters.length}</span>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
-        <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6">
-          Kudamono
-        </h1>
-        
-        <p className="max-w-2xl mx-auto text-xl text-slate-500 mb-10 leading-relaxed">
-          est 2026
-        </p>
+      <div style={{ background: 'linear-gradient(180deg, #161822 0%, #12131a 100%)', padding: '3.5rem 1.5rem 2rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+          
+          <div ref={searchContainerRef} style={{ maxWidth: '600px', margin: '0 auto', position: 'relative' }}>
+            <input 
+              type="text" 
+              placeholder="Search.." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              style={{ width: '100%', padding: '1rem 1.2rem', borderRadius: '8px', border: '1px solid #2d313f', backgroundColor: '#1a1c24', color: '#fff', fontSize: '1.05rem', outline: 'none', boxShadow: isSearchFocused ? '0 0 0 2px #ff4757' : 'none' }}
+            />
 
-        {/* Call to Action Buttons */}
-        <div className="flex justify-center space-x-4">
-          <button 
-            onClick={() => setIsDropdownOpen(true)}
-            className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md transition-colors"
-          >
-            Explore Items
-          </button>
-          <button className="px-6 py-3 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 shadow-sm transition-colors">
-            About
-          </button>
+            {isSearchFocused && searchQuery.trim() !== '' && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.7)', zIndex: 90, maxHeight: '380px', overflowY: 'auto', textAlign: 'left' }}>
+                <div style={{ padding: '0.5rem 1rem', borderBottom: '1px solid #2d313f', fontSize: '0.75rem', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{globalSearchResults.length} found</span>
+                </div>
+                
+                {globalSearchResults.length > 0 ? (
+                  globalSearchResults.map(char => (
+                    <div key={char.id} style={{ display: 'flex', gap: '1rem', padding: '0.75rem 1rem', borderBottom: '1px solid #1f222e', cursor: 'pointer', backgroundColor: '#161822', transition: 'background 0.15s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1e2130'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#161822'}>
+                      <img src={char.imageUrl} alt={char.name} style={{ width: '40px', height: '55px', objectFit: 'cover', borderRadius: '3px' }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ color: '#ff4757', fontWeight: 600, fontSize: '0.95rem' }}>{char.name}</div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>{char.originSeries}</div>
+                        <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.2rem' }}>
+                          {char.tags.slice(0, 2).map(t => (
+                            <span key={t} style={{ fontSize: '0.65rem', color: '#cbd5e1', backgroundColor: '#2d313f', padding: '1px 5px', borderRadius: '3px' }}>{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+                    No characters match &quot;<span style={{ color: '#cbd5e1' }}>{searchQuery}</span>&quot;
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
-      </main>
+      </div>
 
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem 4rem', display: 'grid', gridTemplateColumns: '1fr 320px', gap: '2rem' }}>
+        
+        <section style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '1.5rem' }}>
+          <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.2rem', borderBottom: '1px solid #2d313f', paddingBottom: '0.5rem', color: '#fff' }}>
+            Recently Added
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {characters.map(char => (
+              <div key={char.id} style={{ display: 'flex', gap: '1.2rem', padding: '1rem', border: '1px solid #2d313f', borderRadius: '6px', backgroundColor: '#13141c' }}>
+                <img src={char.imageUrl} alt={char.name} style={{ width: '70px', height: '90px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #2d313f' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', color: '#ff4757', cursor: 'pointer' }}>{char.name}</h4>
+                  <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Series: <strong style={{ color: '#cbd5e1' }}>{char.originSeries}</strong></span>
+                  
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    {char.tags.map(t => (
+                      <span key={t} style={{ fontSize: '0.75rem', backgroundColor: '#1e293b', color: '#94a3b8', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          
+          <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: '#ff4757' }}></div>
+            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              ✨ Girl of the Day
+            </h3>
+            
+            {characters.length > 0 && (
+              <div style={{ textAlign: 'center', backgroundColor: '#13141c', padding: '1rem', borderRadius: '6px', border: '1px solid #2d313f' }}>
+                <img 
+                  src={characters[0].imageUrl} 
+                  alt={characters[0].name} 
+                  style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '4px', marginBottom: '0.75rem' }} 
+                />
+                <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.15rem', color: '#fff' }}>{characters[0].name}</h4>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>{characters[0].originSeries}</p>
+              </div>
+            )}
+            <p style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic', marginTop: '0.75rem', textAlign: 'center', marginBottom: 0 }}>
+              Changes automatically every 24 hours.
+            </p>
+          </div>
+
+          <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.9rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #2d313f', paddingBottom: '0.4rem' }}>
+                <span style={{ color: '#94a3b8' }}>Characters:</span>
+                <span style={{ fontWeight: 'bold' }}>2,481</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #2d313f', paddingBottom: '0.4rem' }}>
+                <span style={{ color: '#94a3b8' }}>Series Indexed:</span>
+                <span style={{ fontWeight: 'bold' }}>412</span>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
     </div>
   );
 }
