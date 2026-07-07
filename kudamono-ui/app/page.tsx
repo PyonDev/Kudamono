@@ -2,14 +2,11 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { MOCK_CHARACTERS, AnimeCharacter } from './data/mockAnime';
-import { menuItems } from './data/const';
-import Link from 'next/link';
 
 export default function Home() {
   const [characters] = useState<AnimeCharacter[]>(MOCK_CHARACTERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -37,46 +34,6 @@ export default function Home() {
   return (
     <div style={{ backgroundColor: '#12131a', color: '#e2e8f0', minHeight: '100vh', fontFamily: 'Segoe UI, Roboto, Helvetica, sans-serif' }}>
       
-      <nav style={{ backgroundColor: '#1a1c24', borderBottom: '1px solid #2d313f', position: 'relative', zIndex: 100 }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', height: '60px', padding: '0 1.5rem' }}>
-          
-          <div style={{ fontWeight: 'bold', fontSize: '1.4rem', color: '#ff4757', marginRight: '3rem', cursor: 'pointer', letterSpacing: '0.5px' }}>
-            KUDAMONO
-          </div>
-
-          <div style={{ display: 'flex', gap: '1.5rem', flexGrow: 1 }}>
-            {Object.entries(menuItems).map(([title, options]) => (
-              <div 
-                key={title} 
-                style={{ position: 'relative' }}
-                onMouseEnter={() => setActiveDropdown(title)}
-                onMouseLeave={() => setActiveDropdown(null)}
-              >
-                <button style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.95rem', fontWeight: 500, cursor: 'pointer', padding: '10px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  {title} <span style={{ fontSize: '0.7rem' }}>▼</span>
-                </button>
-
-                {activeDropdown === title && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '4px', minWidth: '180px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)', padding: '0.5rem 0' }}>
-                    {options.map(option => {
-                      const targetPath = option === 'All Characters' ? '/characters' : '#';
-                      return (
-                        <Link key={option} href={targetPath} style={{ display: 'block', padding: '0.6rem 1.2rem', color: '#cbd5e1', textDecoration: 'none', fontSize: '0.88rem', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2d313f'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                          {option}
-                        </Link>
-                      );
-                     })}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
-            Database Entries: <span style={{ color: '#ff4757', fontWeight: 'bold' }}>{characters.length}</span>
-          </div>
-        </div>
-      </nav>
 
       <div style={{ background: 'linear-gradient(180deg, #161822 0%, #12131a 100%)', padding: '3.5rem 1.5rem 2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
@@ -160,7 +117,7 @@ export default function Home() {
             
             {characters.length > 0 && (
               <div style={{ textAlign: 'center', backgroundColor: '#13141c', padding: '1rem', borderRadius: '6px', border: '1px solid #2d313f' }}>
-                <img 
+                <img
                   src={characters[0].imageUrl} 
                   alt={characters[0].name} 
                   style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '4px', marginBottom: '0.75rem' }} 
