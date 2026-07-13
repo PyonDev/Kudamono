@@ -10,7 +10,7 @@ export interface AnimeCharacter {
 // todo: decide on categories later
 export const MOCK_CHARACTERS: AnimeCharacter[] = [
   {
-    id: "c1",
+    id: "holo",
     name: "Holo",
     originSeries: "Spice and Wolf",
     description: "The Wise Wolf of Yoitsu, a powerful wolf deity who travels alongside the merchant Lawrence.",
@@ -18,7 +18,7 @@ export const MOCK_CHARACTERS: AnimeCharacter[] = [
     tags: ["Deity", "Kemonomimi", "Witty"]
   },
   {
-    id: "c2",
+    id: "kurisumakise",
     name: "Kurisu Makise",
     originSeries: "Steins;Gate",
     description: "A genius neuroscientist who graduated from university at seventeen. Rational, sarcastic, and deeply curious.",
@@ -26,7 +26,7 @@ export const MOCK_CHARACTERS: AnimeCharacter[] = [
     tags: ["Tsundere", "Scientist", "Kuudere"]
   },
   {
-    id: "c3",
+    id: "rem",
     name: "Rem",
     originSeries: "Re:Zero",
     description: "A loyal maid working at the Roswaal Mansion alongside her twin sister, Ram. Highly skilled in water magic.",

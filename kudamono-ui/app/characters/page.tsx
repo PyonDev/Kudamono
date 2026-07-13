@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { MOCK_CHARACTERS, AnimeCharacter } from '../data/mockAnime';
+import Link from 'next/link';
 
 export default function BrowseCharacters() {
   const [characters] = useState<AnimeCharacter[]>(MOCK_CHARACTERS);
@@ -111,20 +112,26 @@ export default function BrowseCharacters() {
           {paginatedCharacters.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               {paginatedCharacters.map(char => (
-                <div key={char.id} style={{ display: 'flex', gap: '1.2rem', padding: '1rem', border: '1px solid #2d313f', borderRadius: '8px', backgroundColor: '#1a1c24' }}>
+                <Link 
+                  key={char.id} 
+                  href={`/characters/${char.id}`}
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }} // keeps layout styles pristine
+              >
+                <div style={{ display: 'flex', gap: '1.2rem', padding: '1rem', border: '1px solid #2d313f', borderRadius: '8px', backgroundColor: '#1a1c24', width: '100%', cursor: 'pointer', transition: 'transform 0.15s ease' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
                   <img src={char.imageUrl} alt={char.name} style={{ width: '80px', height: '110px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #2d313f' }} />
                   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.15rem', color: '#ff4757' }}>{char.name}</h4>
                     <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.75rem' }}>Series: <strong style={{ color: '#cbd5e1' }}>{char.originSeries}</strong></span>
-                    
+        
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       {char.tags.map(t => (
                         <span key={t} style={{ fontSize: '0.75rem', backgroundColor: '#1e293b', color: '#94a3b8', padding: '2px 8px', borderRadius: '4px' }}>{t}</span>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              </div>
+          </Link>
+          ))}
             </div>
           ) : (
             <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '4rem 2rem', textAlign: 'center', color: '#64748b' }}>

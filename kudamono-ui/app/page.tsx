@@ -2,6 +2,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { MOCK_CHARACTERS, AnimeCharacter } from './data/mockAnime';
+import Link from 'next/dist/client/link';
 
 export default function Home() {
   const [characters] = useState<AnimeCharacter[]>(MOCK_CHARACTERS);
@@ -56,6 +57,7 @@ export default function Home() {
                 
                 {globalSearchResults.length > 0 ? (
                   globalSearchResults.map(char => (
+                    <Link key={char.id} href={`/characters/${char.id}`} style={{ textDecoration: 'none' }}>
                     <div key={char.id} style={{ display: 'flex', gap: '1rem', padding: '0.75rem 1rem', borderBottom: '1px solid #1f222e', cursor: 'pointer', backgroundColor: '#161822', transition: 'background 0.15s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1e2130'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#161822'}>
                       <img src={char.imageUrl} alt={char.name} style={{ width: '40px', height: '55px', objectFit: 'cover', borderRadius: '3px' }} />
                       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -68,6 +70,7 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
+                    </Link>
                   ))
                 ) : (
                   <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.9rem' }}>
@@ -90,6 +93,7 @@ export default function Home() {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {characters.map(char => (
+              <Link key={char.id} href={`/characters/${char.id}`} style={{ textDecoration: 'none' }}>
               <div key={char.id} style={{ display: 'flex', gap: '1.2rem', padding: '1rem', border: '1px solid #2d313f', borderRadius: '6px', backgroundColor: '#13141c' }}>
                 <img src={char.imageUrl} alt={char.name} style={{ width: '70px', height: '90px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #2d313f' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -103,6 +107,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+              </Link>
             ))}
           </div>
         </section>
