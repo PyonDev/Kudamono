@@ -9,7 +9,7 @@ export default function BrowseCharacters() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = 10;
 
   const allUniqueTags = useMemo(() => {
     const tagsSet = new Set<string>();
@@ -115,7 +115,7 @@ export default function BrowseCharacters() {
                 <Link 
                   key={char.id} 
                   href={`/characters/${char.id}`}
-                  style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }} // keeps layout styles pristine
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}
               >
                 <div style={{ display: 'flex', gap: '1.2rem', padding: '1rem', border: '1px solid #2d313f', borderRadius: '8px', backgroundColor: '#1a1c24', width: '100%', cursor: 'pointer', transition: 'transform 0.15s ease' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
                   <img src={char.imageUrl} alt={char.name} style={{ width: '80px', height: '110px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #2d313f' }} />

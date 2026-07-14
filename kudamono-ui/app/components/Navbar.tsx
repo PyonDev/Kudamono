@@ -1,8 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 import { AnimeCharacter, MOCK_CHARACTERS } from '../data/mockAnime';
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const { user, isLoggedIn, logout, isAuthModalOpen, setIsAuthModalOpen, login } = useAuth();
@@ -13,6 +15,36 @@ export default function Navbar() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
+        setSearchQuery('');
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+  }, [searchContainerRef]);
+
+  const globalSearchResults = searchQuery.trim() === '' 
+    ? [] 
+    : characters.filter(char => {
+        const query = searchQuery.toLowerCase();
+        return (
+          char.name.toLowerCase().includes(query) ||
+          char.originSeries.toLowerCase().includes(query) ||
+          char.tags.some(t => t.toLowerCase().includes(query))
+        );
+      });
 
   const menuItems = {
     'Browse': ['All Characters', 'Popular This Week', 'Recently Added', 'Random Tag'],
@@ -52,6 +84,93 @@ export default function Navbar() {
               </div>
             ))}
           </div>
+
+          <div ref={searchContainerRef} style={{ width: '260px', position: 'relative', margin: '0 1.5rem' }}>
+  <input 
+    type="text" 
+    placeholder="Search characters..." 
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    onFocus={() => setIsSearchFocused(true)}
+    style={{ 
+      width: '100%', 
+      padding: '0.45rem 0.8rem', 
+      borderRadius: '6px', 
+      border: '1px solid #2d313f', 
+      backgroundColor: '#13141c', 
+      color: '#fff', 
+      fontSize: '0.85rem', 
+      outline: 'none', 
+      boxShadow: isSearchFocused ? '0 0 0 1px #ff4757' : 'none',
+      transition: 'all 0.15s ease'
+    }}
+  />
+
+  {isSearchFocused && searchQuery.trim() !== '' && (
+    <div style={{ 
+      position: 'absolute', 
+      top: 'calc(100% + 8px)', 
+      left: 0, 
+      width: '320px', 
+      backgroundColor: '#1a1c24', 
+      border: '1px solid #2d313f', 
+      borderRadius: '8px', 
+      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.7)', 
+      zIndex: 90, 
+      maxHeight: '340px', 
+      overflowY: 'auto'
+    }}>
+      <div style={{ 
+        padding: '0.5rem 0.8rem', 
+        borderBottom: '1px solid #2d313f', 
+        fontSize: '0.7rem', 
+        fontWeight: 'bold', 
+        color: '#64748b', 
+        textTransform: 'uppercase', 
+        display: 'flex', 
+        justifyContent: 'space-between' 
+      }}>
+        <span>{globalSearchResults.length} found</span>
+      </div>
+      
+      {globalSearchResults.length > 0 ? (
+        globalSearchResults.map(char => (
+          <Link 
+            key={char.id} 
+            href={`/characters/${char.id}`} 
+            onClick={() => {
+              setIsSearchFocused(false);
+              setSearchQuery('');
+            }}
+            style={{ textDecoration: 'none', display: 'block' }}
+          >
+            <div style={{ 
+              display: 'flex', 
+              gap: '0.75rem', 
+              padding: '0.6rem 0.8rem', 
+              borderBottom: '1px solid #1f222e', 
+              cursor: 'pointer', 
+              backgroundColor: '#161822', 
+              transition: 'background 0.15s' 
+            }} 
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1e2130'} 
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#161822'}>
+              <img src={char.imageUrl} alt={char.name} style={{ width: '32px', height: '44px', objectFit: 'cover', borderRadius: '3px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <div style={{ color: '#ff4757', fontWeight: 600, fontSize: '0.85rem' }}>{char.name}</div>
+                <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>{char.originSeries}</div>
+              </div>
+            </div>
+          </Link>
+        ))
+      ) : (
+        <div style={{ padding: '1.5rem', textAlign: 'center', color: '#64748b', fontSize: '0.8rem' }}>
+          No matches for &quot;{searchQuery}&quot;
+        </div>
+      )}
+    </div>
+  )}
+        </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {isLoggedIn ? (
