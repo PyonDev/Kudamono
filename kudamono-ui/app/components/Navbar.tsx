@@ -12,9 +12,9 @@ export default function Navbar() {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   
   const [characters] = useState<AnimeCharacter[]>(MOCK_CHARACTERS);
-  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -54,7 +54,7 @@ export default function Navbar() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // todo: api/login
-    login(email, authMode === 'register' ? username : undefined);
+    login(username, authMode === 'register' ? username : undefined);
   };
 
   return (
@@ -210,20 +210,20 @@ export default function Navbar() {
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              {authMode === 'register' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Username</label>
-                  <input type="text" required value={username} onChange={e => setUsername(e.target.value)} style={{ padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#fff', outline: 'none' }} />
-                </div>
-              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Email</label>
-                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} style={{ padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#fff', outline: 'none' }} />
+                <label style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Username</label>
+                <input type="text" required value={username} onChange={e => setUsername(e.target.value)} style={{ padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#fff', outline: 'none' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                 <label style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Password</label>
                 <input type="password" required value={password} onChange={e => setPassword(e.target.value)} style={{ padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#fff', outline: 'none' }} />
               </div>
+              {authMode === 'register' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Confirm Password</label>
+                  <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{ padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#fff', outline: 'none' }} />
+                </div>
+              )}
               <button type="submit" style={{ backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '4px', fontWeight: 600, cursor: 'pointer', marginTop: '0.5rem' }}>
                 {authMode === 'login' ? 'Sign In' : 'Create Account'}
               </button>
