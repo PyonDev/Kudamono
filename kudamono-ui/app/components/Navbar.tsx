@@ -4,10 +4,9 @@ import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 import { AnimeCharacter, MOCK_CHARACTERS } from '../data/mockAnime';
 import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
-  const { user, isLoggedIn, logout, isAuthModalOpen, setIsAuthModalOpen, login } = useAuth();
+  const { user, isLoggedIn, logout, isAuthModalOpen, setIsAuthModalOpen, login, register } = useAuth();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   
@@ -47,14 +46,27 @@ export default function Navbar() {
       });
 
   const menuItems = {
-    'Browse': ['All Characters', 'Popular This Week', 'Recently Added', 'Random Tag'],
+    'Browse': ['All Characters', 'Top Liked', 'Recently Added', 'Random Character'],
     'Community': ['Wiki', 'User Lists', 'Leaderboards']
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // todo: api/login
-    login(username, authMode === 'register' ? username : undefined);
+
+    if (authMode === 'register') {
+      if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+      }
+    const success = await register(username, password);
+    if (success) { 
+      setAuthMode('login');
+      setPassword('');
+      setConfirmPassword('');
+    }
+    } else { 
+      await login(username, password);
+    }
   };
 
   return (
@@ -176,7 +188,7 @@ export default function Navbar() {
             {isLoggedIn ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>
-                  Testing
+                  {user?.username || 'Weeb'}
                 </span>
                 <button onClick={logout} style={{ background: 'none', border: '1px solid #2d313f', color: '#94a3b8', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>
                   Logout
