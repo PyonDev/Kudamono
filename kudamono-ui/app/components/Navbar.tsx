@@ -187,9 +187,9 @@ export default function Navbar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {isLoggedIn ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>
+                <Link href={`/user/${user?.username || 'weeb'}`} style={{ textDecoration: 'none', transition: 'color 0.2s', color: '#cbd5e1', fontSize: '0.9rem' }} onMouseOver={(e) => e.currentTarget.style.color = '#ff4757'} onMouseOut={(e) => e.currentTarget.style.color = '#cbd5e1'}>
                   {user?.username || 'Weeb'}
-                </span>
+                </Link>
                 <button onClick={logout} style={{ background: 'none', border: '1px solid #2d313f', color: '#94a3b8', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>
                   Logout
                 </button>
