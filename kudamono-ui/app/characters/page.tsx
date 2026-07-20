@@ -2,11 +2,13 @@
 import { useState, useMemo } from 'react';
 import { MOCK_CHARACTERS, AnimeCharacter } from '../data/mockAnime';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function BrowseCharacters() {
   const [characters] = useState<AnimeCharacter[]>(MOCK_CHARACTERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
 
   const ITEMS_PER_PAGE = 10;
@@ -50,6 +52,30 @@ export default function BrowseCharacters() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem 4rem', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '2rem' }}>
         
         <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+          <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '1.25rem' }}>
+            <button 
+              onClick={() => router.push('/characters/new')}
+              style={{ 
+                width: '100%', 
+                padding: '0.75rem 1rem', 
+                borderRadius: '4px', 
+                border: 'none', 
+                backgroundColor: '#ff4757',
+                color: '#fff', 
+                fontSize: '0.9rem', 
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'background-color 0.15s ease'
+              }}
+            >
+              Submit New Character
+            </button>
+          </div>
           
           <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '1.25rem' }}>
             <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Search</h3>
