@@ -1,5 +1,6 @@
 package com.nyanpan.kudamono.model;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.springframework.data.annotation.Id;
@@ -15,13 +16,16 @@ public class User {
     private String username;
     @Field("password")
     private String password;
+    @Field("favourites")
+    private Set<String> favourites = new HashSet<>();
     private Set<String> roles;
 
     public User() {}
 
-    public User(String username, String password, Set<String> roles) {
+    public User(String username, String password, Set<String> favourites, Set<String> roles) {
         this.username = username;
         this.password = password;
+        this.favourites = favourites;
         this.roles = roles;
     }
 
@@ -49,5 +53,12 @@ public class User {
         return roles;
     }
     
+    public Set<String> getFavourites() {
+        return favourites;
+    }
+
+    public void setFavourites(Set<String> favourites) {
+        this.favourites = favourites;
+    }
 
 }

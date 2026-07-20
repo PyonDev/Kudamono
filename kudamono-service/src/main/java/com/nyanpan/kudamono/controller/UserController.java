@@ -1,9 +1,13 @@
 package com.nyanpan.kudamono.controller;
 
+import java.util.Set;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,6 +29,28 @@ public class UserController {
     public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
         return userRepository.findByUsernameIgnoreCase(username)
                 .map(user -> ResponseEntity.ok(user))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{username}/favourites/{itemId}")
+    public ResponseEntity<Set<String>> addFavourite(@PathVariable String username, @PathVariable String itemId) {
+        return userRepository.findByUsernameIgnoreCase(username)
+                .map(user -> {
+                    user.getFavourites().add(itemId);
+                    userRepository.save(user);
+                    return ResponseEntity.ok(user.getFavourites());
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{username}/favourites/{itemId}")
+    public ResponseEntity<Set<String>> removeFavourite(@PathVariable String username, @PathVariable String itemId) {
+        return userRepository.findByUsernameIgnoreCase(username)
+                .map(user -> {
+                    user.getFavourites().remove(itemId);
+                    userRepository.save(user);
+                    return ResponseEntity.ok(user.getFavourites());
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 

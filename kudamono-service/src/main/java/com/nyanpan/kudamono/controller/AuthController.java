@@ -36,7 +36,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Error: Username is already taken!"));
         }
         
-        User user = new User(username, passwordEncoder.encode(password), Collections.singleton("ROLE_USER"));
+        User user = new User(username, passwordEncoder.encode(password), Collections.emptySet(), Collections.singleton("ROLE_USER"));
         userRepository.save(user);
         return ResponseEntity.ok(Map.of("message", "User registered successfully!"));
 
