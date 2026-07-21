@@ -1,5 +1,7 @@
 package com.nyanpan.kudamono.model;
 
+import java.util.Set;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -9,20 +11,18 @@ public class CatalogItem {
     private String id;
 
     private String name;
-    private String description;
+    private String series;
     private String imageUrl;
-    private String category;
-    private String source;
+    private Set<String> tags;
 
     public CatalogItem() {
     }
 
-    public CatalogItem(String name, String description, String imageUrl, String category, String source) {
+    public CatalogItem(String name, String series, String imageUrl, Set<String> tags) {
         this.name = name;
-        this.description = description;
+        this.series = series;
         this.imageUrl = imageUrl;
-        this.category = category;
-        this.source = source;
+        this.tags = tags;
     }
 
     public String getId() {
@@ -37,12 +37,12 @@ public class CatalogItem {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getSeries() {
+        return series;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setDescription(String series) {
+        this.series = series;
     }
 
     public String getImageUrl() {
@@ -53,19 +53,12 @@ public class CatalogItem {
         this.imageUrl = imageUrl;
     }
 
-    public String getCategory() {
-        return category;
+    public Set<String> getTags() {
+        return tags;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
     }
 
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
 }

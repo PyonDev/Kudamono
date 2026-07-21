@@ -3,7 +3,7 @@ package com.nyanpan.kudamono.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "reviews")
+@Document(collection = "to_be_reviewed")
 public class Review {
     @Id
     private String id;

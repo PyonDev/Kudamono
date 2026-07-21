@@ -1,21 +1,21 @@
 package com.nyanpan.kudamono.dto;
 
+import java.util.Set;
+
 public class CatalogItemResponse {
     private String id;
     private String name;
-    private String description;
+    private String series;
     private String imageUrl;
-    private String category;
-    private String source;
+    private Set<String> tags;
 
 
-    public CatalogItemResponse(String id, String name, String description, String imageUrl, String category, String source) {
+    public CatalogItemResponse(String id, String name, String series, String imageUrl, Set<String> tags) {
         this.id = id;
         this.name = name;
-        this.description = description;
+        this.series = series;
         this.imageUrl = imageUrl;
-        this.category = category;
-        this.source = source;
+        this.tags = tags;
     }
 
     public String getId() {
@@ -26,19 +26,15 @@ public class CatalogItemResponse {
         return name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getSeries() {
+        return series;
     }
 
     public String getImageUrl() {
         return imageUrl;
     }
 
-    public String getCategory() {
-        return category;
-    }
-
-    public String getSource() {
-        return source;
+    public Set<String> getTags() {
+        return tags;
     }
 }

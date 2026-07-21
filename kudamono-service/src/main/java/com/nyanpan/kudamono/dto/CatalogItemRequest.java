@@ -1,11 +1,12 @@
 package com.nyanpan.kudamono.dto;
 
+import java.util.Set;
+
 public class CatalogItemRequest {
     public String name;
-    public String description;
+    public String series;
     public String imageUrl;
-    public String category;
-    public String source;
+    public Set<String> tags;
 
     public CatalogItemRequest() {}
 
@@ -17,12 +18,12 @@ public class CatalogItemRequest {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getSeries() {
+        return series;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSeries(String series) {
+        this.series = series;
     }
 
     public String getImageUrl() {
@@ -33,19 +34,11 @@ public class CatalogItemRequest {
         this.imageUrl = imageUrl;
     }
 
-    public String getCategory() {
-        return category;
+    public Set<String> tags() {
+        return tags;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
+    public void setTags(Set<String> tags) {
+        this.tags = tags;
     }
 }
