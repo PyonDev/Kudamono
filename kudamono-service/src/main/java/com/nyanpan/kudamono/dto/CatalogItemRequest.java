@@ -34,7 +34,7 @@ public class CatalogItemRequest {
         this.imageUrl = imageUrl;
     }
 
-    public Set<String> tags() {
+    public Set<String> getTags() {
         return tags;
     }
 

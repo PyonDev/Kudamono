@@ -1,6 +1,7 @@
 package com.nyanpan.kudamono.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -24,32 +25,40 @@ public class CatalogService {
         .map(item -> new CatalogItemResponse(
             item.getId(),
             item.getName(),
-            item.getDescription(),
+            item.getSeries(),
             item.getImageUrl(),
-            item.getCategory(),
-            item.getSource()
+            item.getTags()
         )).collect(Collectors.toList());
     }
 
-    public List<CatalogItemResponse> getCatalogItemsByCategory(String category) {
-        return catalogRepository.findByCategory(category).stream()
+    public List<CatalogItemResponse> getCatalogItemsBySeries(String series) {
+        return catalogRepository.findBySeries(series).stream()
         .map(item -> new CatalogItemResponse(
             item.getId(),
             item.getName(),
-            item.getDescription(),
+            item.getSeries(),
             item.getImageUrl(),
-            item.getCategory(),
-            item.getSource()
+            item.getTags()
         )).collect(Collectors.toList());
+    }
+
+    public Optional<CatalogItemResponse> getCatalogItemByName(String name) {
+        return catalogRepository.findByNameIgnoreCase(name)
+        .map(item -> new CatalogItemResponse(
+            item.getId(),
+            item.getName(),
+            item.getSeries(),
+            item.getImageUrl(),
+            item.getTags()
+        ));
     }
 
     public CatalogItemResponse saveCatalogItem(CatalogItemRequest request) {
         CatalogItem entity = new CatalogItem(
                 request.getName(),
-                request.getDescription(),
+                request.getSeries(),
                 request.getImageUrl(),
-                request.getCategory(),
-                request.getSource()
+                request.getTags()
         );
 
         CatalogItem savedEntity = catalogRepository.save(entity);
@@ -57,10 +66,9 @@ public class CatalogService {
         return new CatalogItemResponse(
                 savedEntity.getId(),
                 savedEntity.getName(),
-                savedEntity.getDescription(),
+                savedEntity.getSeries(),
                 savedEntity.getImageUrl(),
-                savedEntity.getCategory(),
-                savedEntity.getSource()
+                savedEntity.getTags()
         );
     }
 }

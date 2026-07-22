@@ -41,7 +41,7 @@ public class CatalogItem {
         return series;
     }
 
-    public void setDescription(String series) {
+    public void setSeries(String series) {
         this.series = series;
     }
 

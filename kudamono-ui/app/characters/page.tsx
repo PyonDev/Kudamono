@@ -1,17 +1,55 @@
 'use client';
-import { useState, useMemo } from 'react';
-import { MOCK_CHARACTERS, AnimeCharacter } from '../data/mockAnime';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+interface Character {
+  id: number;
+  name: string;
+  series: string;
+  tags: string[];
+  imageUrl: string;
+}
+
 export default function BrowseCharacters() {
-  const [characters] = useState<AnimeCharacter[]>(MOCK_CHARACTERS);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
 
   const ITEMS_PER_PAGE = 10;
+
+
+  useEffect(() => {
+    async function fetchCharacters() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch('http://localhost:8080/api/v1/catalog');
+        if (!response.ok) {
+          throw new Error(`Error fetching characters: ${response.statusText}`);
+        }
+        const data = await response.json();
+        const transformedData: Character[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          series: item.series || 'Unknown Series',
+          tags: Array.isArray(item.tags) ? item.tags : [],
+          imageUrl: item.imageUrl || ''
+        }))
+        setCharacters(transformedData);
+      } catch (err) {
+        setError('Failed to fetch characters.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchCharacters();
+  }, []);
 
   const allUniqueTags = useMemo(() => {
     const tagsSet = new Set<string>();
@@ -23,7 +61,7 @@ export default function BrowseCharacters() {
     return characters.filter(char => {
       const matchesSearch = searchQuery.trim() === '' || 
         char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        char.originSeries.toLowerCase().includes(searchQuery.toLowerCase());
+        char.series.toLowerCase().includes(searchQuery.toLowerCase());
         
       const matchesTag = !selectedTag || char.tags.includes(selectedTag);
       

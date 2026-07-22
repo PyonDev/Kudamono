@@ -2,12 +2,88 @@
 import { useParams } from 'next/navigation';
 import { MOCK_CHARACTERS } from '../../data/mockAnime';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+interface Character {
+  id: number;
+  name: string;
+  series: string;
+  tags: string[];
+  imageUrl: string;
+}
 
 export default function CharacterDetailPage() {
   const params = useParams();
-  const { id } = params;
+  const id  = params?.id as string;
+
+  const [char, setChar] = useState<Character | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const character = MOCK_CHARACTERS.find(char => char.id === id);
+
+  useEffect(() => {
+    if (!id) return;
+
+    async function loadCharacterDetail() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await fetch(`http://localhost:8080/api/v1/catalog/${name}`);
+        
+        if (response.status === 404) {
+          setChar(null);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Could not sync details from database server.');
+        }
+
+        const data = await response.json();
+
+        const normalizedCharacter: Character = {
+          id: data.id,
+          name: data.name,
+          series: data.series || 'Unknown Series',
+          imageUrl: data.imageUrl || '',
+          tags: Array.isArray(data.tags) ? data.tags : []
+        };
+
+        setChar(normalizedCharacter);
+      } catch (err: any) {
+        console.error('Fetch Details Error:', err);
+        setError(err.message || 'An unexpected connection error occurred.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadCharacterDetail();
+  }, [name]);
+
+  if (isLoading) {
+    return (
+      <div style={{ backgroundColor: '#12131a', color: '#e2e8f0', minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'Segoe UI, Roboto, sans-serif' }}>
+        <div style={{ width: '30px', height: '30px', border: '3px solid #2d313f', borderTopColor: '#ff4757', borderRadius: '50%', marginBottom: '1rem', animation: 'spin 1s linear infinite' }} />
+        <p style={{ color: '#94a3b8' }}>Hydrating record profile...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ backgroundColor: '#12131a', color: '#e2e8f0', minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'Segoe UI, Roboto, sans-serif' }}>
+        <h2 style={{ color: '#ff4757', fontSize: '1.5rem', marginBottom: '0.5rem' }}>Connection Failed</h2>
+        <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>{error}</p>
+        <Link href="/characters" style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', color: '#cbd5e1', textDecoration: 'none', padding: '0.6rem 1.2rem', borderRadius: '4px', fontWeight: 600 }}>
+          Return to Catalog
+        </Link>
+      </div>
+    );
+  }
 
   if (!character) {
     return (
