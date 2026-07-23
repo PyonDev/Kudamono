@@ -6,6 +6,7 @@ import { AnimeCharacter, MOCK_CHARACTERS } from '../data/mockAnime';
 import { useEffect } from 'react';
 
 export default function Navbar() {
+  const [isMounted, setIsMounted] = useState(false);
   const { user, isLoggedIn, logout, isAuthModalOpen, setIsAuthModalOpen, login, register } = useAuth();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -33,6 +34,10 @@ export default function Navbar() {
         document.removeEventListener('mousedown', handleClickOutside);
       };
   }, [searchContainerRef]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, [])
 
   const globalSearchResults = searchQuery.trim() === '' 
     ? [] 
@@ -185,7 +190,7 @@ export default function Navbar() {
         </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {isLoggedIn ? (
+            {!isMounted ? ( <div style={{ width: '130px', height: '36px' }} /> ) : isLoggedIn ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <Link href={`/user/${user?.username || 'weeb'}`} style={{ textDecoration: 'none', transition: 'color 0.2s', color: '#cbd5e1', fontSize: '0.9rem' }} onMouseOver={(e) => e.currentTarget.style.color = '#ff4757'} onMouseOut={(e) => e.currentTarget.style.color = '#cbd5e1'}>
                   {user?.username || 'Weeb'}

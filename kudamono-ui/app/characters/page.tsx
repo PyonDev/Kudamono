@@ -38,7 +38,7 @@ export default function BrowseCharacters() {
           name: item.name,
           series: item.series || 'Unknown Series',
           tags: Array.isArray(item.tags) ? item.tags : [],
-          imageUrl: item.imageUrl || ''
+          imageUrl: item.imageUrl || null
         }))
         setCharacters(transformedData);
       } catch (err) {
@@ -177,15 +177,15 @@ export default function BrowseCharacters() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               {paginatedCharacters.map(char => (
                 <Link 
-                  key={char.id} 
-                  href={`/characters/${char.id}`}
+                  key={char.name} 
+                  href={`/characters/${char.name.replace(/\s+/g, '')}`}
                   style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}
               >
                 <div style={{ display: 'flex', gap: '1.2rem', padding: '1rem', border: '1px solid #2d313f', borderRadius: '8px', backgroundColor: '#1a1c24', width: '100%', cursor: 'pointer', transition: 'transform 0.15s ease' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'none'}>
                   <img src={char.imageUrl} alt={char.name} style={{ width: '80px', height: '110px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #2d313f' }} />
                   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.15rem', color: '#ff4757' }}>{char.name}</h4>
-                    <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.75rem' }}>Series: <strong style={{ color: '#cbd5e1' }}>{char.originSeries}</strong></span>
+                    <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.75rem' }}>Series: <strong style={{ color: '#cbd5e1' }}>{char.series}</strong></span>
         
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       {char.tags.map(t => (

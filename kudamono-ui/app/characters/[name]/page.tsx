@@ -1,12 +1,11 @@
 'use client';
 import { useParams } from 'next/navigation';
-import { MOCK_CHARACTERS } from '../../data/mockAnime';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 interface Character {
-  id: number;
-  name: string;
+  id: string;
+  charName: string;
   series: string;
   tags: string[];
   imageUrl: string;
@@ -14,23 +13,23 @@ interface Character {
 
 export default function CharacterDetailPage() {
   const params = useParams();
-  const id  = params?.id as string;
+  
+  const nameParam = params?.name as string; 
+  const decodedName = nameParam ? decodeURIComponent(nameParam) : '';
 
   const [char, setChar] = useState<Character | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const character = MOCK_CHARACTERS.find(char => char.id === id);
-
   useEffect(() => {
-    if (!id) return;
+    if (!decodedName) return;
 
     async function loadCharacterDetail() {
       try {
         setIsLoading(true);
         setError(null);
         
-        const response = await fetch(`http://localhost:8080/api/v1/catalog/${name}`);
+        const response = await fetch(`http://localhost:8080/api/v1/catalog/${encodeURIComponent(decodedName)}`);
         
         if (response.status === 404) {
           setChar(null);
@@ -44,10 +43,10 @@ export default function CharacterDetailPage() {
         const data = await response.json();
 
         const normalizedCharacter: Character = {
-          id: data.id,
-          name: data.name,
+          id: data.id || 'N/A',
+          charName: data.name || 'Unknown Name',
           series: data.series || 'Unknown Series',
-          imageUrl: data.imageUrl || '',
+          imageUrl: data.imageUrl || null,
           tags: Array.isArray(data.tags) ? data.tags : []
         };
 
@@ -61,7 +60,7 @@ export default function CharacterDetailPage() {
     }
 
     loadCharacterDetail();
-  }, [name]);
+  }, [decodedName]);
 
   if (isLoading) {
     return (
@@ -85,7 +84,7 @@ export default function CharacterDetailPage() {
     );
   }
 
-  if (!character) {
+  if (!char) {
     return (
       <div style={{ backgroundColor: '#12131a', color: '#e2e8f0', minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'Segoe UI, Roboto, sans-serif' }}>
         <h1 style={{ color: '#ff4757', fontSize: '2.5rem', marginBottom: '1rem' }}>404</h1>
@@ -111,8 +110,8 @@ export default function CharacterDetailPage() {
           
           <div style={{ textAlign: 'center' }}>
             <img 
-              src={character.imageUrl} 
-              alt={character.name} 
+              src={char.imageUrl} 
+              alt={char.charName} 
               style={{ width: '100%', height: '420px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #2d313f', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4)' }} 
             />
             
@@ -128,13 +127,13 @@ export default function CharacterDetailPage() {
 
           <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '2.5rem' }}>
             <span style={{ color: '#ff4757', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '1px' }}>
-              Database Record #{character.id}
+              Database Record #{char.id}
             </span>
             <h1 style={{ margin: '0.25rem 0 0.5rem 0', fontSize: '2.5rem', color: '#fff', fontWeight: 700 }}>
-              {character.name}
+              {char.charName}
             </h1>
             <p style={{ margin: '0 0 2rem 0', fontSize: '1.2rem', color: '#94a3b8' }}>
-              Origin Series: <strong style={{ color: '#ff4757' }}>{character.originSeries}</strong>
+              Origin Series: <strong style={{ color: '#ff4757' }}>{char.series}</strong>
             </p>
 
             <hr style={{ border: 'none', borderTop: '1px solid #2d313f', margin: '2rem 0' }} />
@@ -157,7 +156,7 @@ export default function CharacterDetailPage() {
 
             <h3 style={{ color: '#fff', fontSize: '1.1rem', margin: '0 0 0.75rem 0' }}>Tags</h3>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {character.tags.map(t => (
+              {char.tags.map(t => (
                 <span 
                   key={t} 
                   style={{ fontSize: '0.85rem', backgroundColor: '#1e293b', color: '#94a3b8', padding: '4px 12px', borderRadius: '4px', border: '1px solid #2d313f' }}

@@ -1,10 +1,13 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
 
 export default function NewCharacterPage() {
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isLoggedIn } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     series: '',
@@ -12,24 +15,34 @@ export default function NewCharacterPage() {
     imageUrl: ''
   });
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const isFormDisabled = !isMounted || !isLoggedIn;
+
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '0.65rem 0.8rem',
     borderRadius: '4px',
     border: '1px solid #2d313f',
-    backgroundColor: '#13141c',
-    color: '#fff',
+    backgroundColor: isFormDisabled ? '#1a1c24' : '#13141c',
+    color: isFormDisabled ? '#64748b' : '#fff',
     fontSize: '0.9rem',
     outline: 'none',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    cursor: isFormDisabled ? 'not-allowed' : 'text',
+    transition: 'all 0.2s ease'
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!isLoggedIn) return;
+
     if (!formData.name || !formData.series || !formData.tags) {
       alert('Please fill out all required fields.');
       return;
@@ -44,7 +57,7 @@ export default function NewCharacterPage() {
     const payload = {
       name: formData.name,
       series: formData.series,
-      imageUrl: formData.imageUrl,
+      imageUrl: formData.imageUrl || null,
       tags: tagsArray
     };
 
@@ -58,7 +71,7 @@ export default function NewCharacterPage() {
       if (response.ok) {
         router.push('/characters');
       } else {
-        alert('Failed to save the character to the catalog database.');
+        alert('Failed to save the character.');
       }
     } catch (error) {
       console.error('Network Error:', error);
@@ -79,9 +92,15 @@ export default function NewCharacterPage() {
           ← Back to Directory
         </button>
         
-        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Add New Character</h1>
+        <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>Add New Character</h1>
+        
+        {isMounted && !isLoggedIn && (
+          <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#f87171', padding: '0.75rem 1rem', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            You must be logged in to submit new entries.
+          </div>
+        )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', alignItems: 'start', marginTop: '1.5rem' }}>
           
           <form onSubmit={handleSubmit} style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             
@@ -89,42 +108,52 @@ export default function NewCharacterPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Character Name *</label>
-                  <input type="text" name="name" required value={formData.name} onChange={handleChange} style={inputStyle} placeholder="e.g., Makima" />
+                  <input type="text" name="name" required disabled={isFormDisabled} value={formData.name} onChange={handleChange} style={inputStyle} placeholder="e.g., Makima" />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Series *</label>
-                  <input type="text" name="series" required value={formData.series} onChange={handleChange} style={inputStyle} placeholder="e.g., Chainsaw Man" />
+                  <input type="text" name="series" required disabled={isFormDisabled} value={formData.series} onChange={handleChange} style={inputStyle} placeholder="e.g., Chainsaw Man" />
                 </div>
               </div>
             </div>
 
             <div>
-              <h2 style={{ fontSize: '1.1rem', color: '#ff4757', marginBottom: '1rem', borderBottom: '1px solid #2d313f', paddingBottom: '0.5rem' }}>Details</h2>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Tags (comma separated) *</label>
-                <input type="text" name="tags" required value={formData.tags} onChange={handleChange} placeholder="Tsundere, Kuudere.. etc" style={inputStyle} />
+                <input type="text" name="tags" required disabled={isFormDisabled} value={formData.tags} onChange={handleChange} placeholder="Tsundere, Kuudere.. etc" style={inputStyle} />
               </div>
             </div>
 
             <div>
               <h2 style={{ fontSize: '1.1rem', color: '#ff4757', marginBottom: '1rem', borderBottom: '1px solid #2d313f', paddingBottom: '0.5rem' }}>Media</h2>
               <label style={{ display: 'block', fontSize: '0.85rem', color: '#9ca3af', marginBottom: '0.5rem' }}>Image URL</label>
-              <span style={{ display: 'block', fontSize: '0.70em', color: '#9ca3af', marginBottom: '0.5rem' }}>Optional, will be handled internally</span>
-              <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/character-image.png" style={inputStyle} />
+              <span style={{ display: 'block', fontSize: '0.70rem', color: '#64748b', marginBottom: '0.5rem' }}>Optional, will be handled internally</span>
+              <input type="text" name="imageUrl" disabled={isFormDisabled} value={formData.imageUrl} onChange={handleChange} placeholder="https://example.com/character-image.png" style={inputStyle} />
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
               <button type="button" disabled={isSubmitting} onClick={() => router.push('/characters')} style={{ padding: '0.75rem 1.5rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: 'transparent', color: '#fff', cursor: 'pointer' }}>
                 Cancel
               </button>
-              <button type="submit" disabled={isSubmitting} style={{ padding: '0.75rem 2rem', borderRadius: '4px', border: 'none', backgroundColor: '#ff4757', color: '#fff', fontWeight: '600', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}>
-                {isSubmitting ? 'Submitting...' : 'Submit'}
-              </button>
+              
+              {!isMounted ? (
+                <button type="button" disabled style={{ padding: '0.75rem 2rem', borderRadius: '4px', border: 'none', backgroundColor: '#2d313f', color: '#94a3b8', fontWeight: '600', cursor: 'not-allowed' }}>
+                  Loading...
+                </button>
+              ) : isLoggedIn ? (
+                <button type="submit" disabled={isSubmitting} style={{ padding: '0.75rem 2rem', borderRadius: '4px', border: 'none', backgroundColor: '#ff4757', color: '#fff', fontWeight: '600', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}>
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
+                </button>
+              ) : (
+                <button type="button" disabled style={{ padding: '0.75rem 2rem', borderRadius: '4px', border: 'none', backgroundColor: '#2d313f', color: '#64748b', fontWeight: '600', cursor: 'not-allowed' }}>
+                  Login Required
+                </button>
+              )}
             </div>
           </form>
 
           <div style={{ position: 'sticky', top: '2rem', backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '1.25rem', textAlign: 'center' }}>
-            <h3 style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Card Preview</h3>
+            <h3 style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Preview</h3>
             
             <div style={{ width: '100%', height: '220px', borderRadius: '6px', backgroundColor: '#13141c', border: '1px solid #2d313f', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '1rem' }}>
               {formData.imageUrl ? (
