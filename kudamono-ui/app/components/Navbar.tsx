@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 import { AnimeCharacter, MOCK_CHARACTERS } from '../data/mockAnime';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const [isMounted, setIsMounted] = useState(false);
@@ -20,6 +21,7 @@ export default function Navbar() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -74,6 +76,28 @@ export default function Navbar() {
     }
   };
 
+  const handleRandomCharacterClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveDropdown(null);
+
+    try {
+      const res = await fetch('http://localhost:8080/api/v1/catalog/random');
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch a random character');
+      }
+
+      const data = await res.json();
+      
+      if (data.name) {
+        const charName = encodeURIComponent(data.name.replace(/\s+/g, ''))
+        router.push(`/characters/${charName}`);
+      }
+    } catch (error) {
+      console.error('Error fetching character: ', error);
+    }
+  }
+
   return (
     <>
       <nav style={{ backgroundColor: '#1a1c24', borderBottom: '1px solid #2d313f', position: 'relative', zIndex: 100 }}>
@@ -91,11 +115,27 @@ export default function Navbar() {
                 </button>
                 {activeDropdown === title && (
                   <div style={{ position: 'absolute', top: '100%', left: 0, backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '4px', minWidth: '180px', padding: '0.5rem 0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}>
-                    {options.map(option => (
-                      <Link key={option} href={option === 'All Characters' ? '/characters' : '#'} style={{ display: 'block', padding: '0.6rem 1.2rem', color: '#cbd5e1', textDecoration: 'none', fontSize: '0.88rem' }}>
-                        {option}
-                      </Link>
-                    ))}
+                    {options.map(option => {
+                      const isAllChar = option === 'All Characters';
+                      const isRandom = option === 'Random Character';
+
+                      return (
+                        <Link
+                          key={option}
+                          href={isAllChar ? '/characters' : '#'}
+                          onClick={isRandom ? handleRandomCharacterClick : undefined}
+                          style={{
+                            display: 'block',
+                            padding: '0.6rem 1.2rem',
+                            color: '#cbd5e1',
+                            textDecoration: 'none',
+                            fontSize: '0.88rem'
+                          }}
+                        >
+                          {option}
+                        </Link>
+                      )
+                    })}
                   </div>
                 )}
               </div>

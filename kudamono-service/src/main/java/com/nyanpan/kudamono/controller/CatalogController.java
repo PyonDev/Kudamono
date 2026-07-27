@@ -1,6 +1,7 @@
 package com.nyanpan.kudamono.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import com.nyanpan.kudamono.dto.CatalogItemRequest;
 import com.nyanpan.kudamono.dto.CatalogItemResponse;
@@ -30,6 +31,12 @@ public class CatalogController {
         return catalogService.getCatalogItemByName(name)
             .map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/random")
+    public ResponseEntity<Map<String,String>> getRandomCatalogItem() {
+        String randomName = catalogService.getRandomName();
+        return ResponseEntity.ok(Map.of("name", randomName));
     }
 
     @PostMapping
