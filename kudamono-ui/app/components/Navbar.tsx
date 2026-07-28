@@ -118,12 +118,13 @@ export default function Navbar() {
                     {options.map(option => {
                       const isAllChar = option === 'All Characters';
                       const isRandom = option === 'Random Character';
+                      const isAllUsers = option === 'User Lists';
 
                       return (
                         <Link
                           key={option}
-                          href={isAllChar ? '/characters' : '#'}
-                          onClick={isRandom ? handleRandomCharacterClick : undefined}
+                          href={isAllChar ? '/characters' : isAllUsers ? '/users' : '#'}
+                          onClick={isRandom ? handleRandomCharacterClick : undefined} 
                           style={{
                             display: 'block',
                             padding: '0.6rem 1.2rem',

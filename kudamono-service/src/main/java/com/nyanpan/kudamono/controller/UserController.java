@@ -1,5 +1,6 @@
 package com.nyanpan.kudamono.controller;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
@@ -11,8 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.nyanpan.kudamono.dto.UserResponse;
 import com.nyanpan.kudamono.model.User;
 import com.nyanpan.kudamono.repository.UserRepository;
+import com.nyanpan.kudamono.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -20,9 +23,16 @@ import com.nyanpan.kudamono.repository.UserRepository;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, UserService userService) {
         this.userRepository = userRepository;
+        this.userService = userService;
+    }
+
+    @GetMapping("/all")
+    public List<UserResponse> getAllCatalogItems() {
+        return userService.getAllCatalogItems();
     }
 
     @GetMapping("/{username}")
