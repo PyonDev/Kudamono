@@ -2,6 +2,7 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 interface Character {
   id: string;
@@ -13,13 +14,17 @@ interface Character {
 
 export default function CharacterDetailPage() {
   const params = useParams();
-  
-  const nameParam = params?.name as string; 
+
+  const nameParam = params?.name as string;
   const decodedName = nameParam ? decodeURIComponent(nameParam) : '';
 
   const [char, setChar] = useState<Character | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isActionLoading, setIsActionLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFavorited, setIsFavorited] = useState<boolean>(false);
+
+  const { isLoggedIn, user } = useAuth();
 
   useEffect(() => {
     if (!decodedName) return;
@@ -37,7 +42,7 @@ export default function CharacterDetailPage() {
         }
 
         if (!response.ok) {
-          throw new Error('Could not sync details from database server.');
+          throw new Error('Could not sync details from database.');
         }
 
         const data = await response.json();
@@ -46,7 +51,7 @@ export default function CharacterDetailPage() {
           id: data.id || 'N/A',
           charName: data.name || 'Unknown Name',
           series: data.series || 'Unknown Series',
-          imageUrl: data.imageUrl || null,
+          imageUrl: data.imageUrl || '',
           tags: Array.isArray(data.tags) ? data.tags : []
         };
 
@@ -61,6 +66,58 @@ export default function CharacterDetailPage() {
 
     loadCharacterDetail();
   }, [decodedName]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !user?.username || !char?.id) return;
+
+    async function checkFavoriteStatus() {
+      try {
+        const response = await fetch(`http://localhost:8080/api/v1/users/${user.username}/favourites`);
+        if (response.ok) {
+          const favouritesList: string[] = await response.json();
+          setIsFavorited(favouritesList.includes(char.id));
+        }
+      } catch (err) {
+        console.error('Failed to fetch user favorites:', err);
+      }
+    }
+
+    checkFavoriteStatus();
+  }, [isLoggedIn, user?.username, char?.id]);
+
+  const handleFavourites = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (!isLoggedIn || !user?.username || !char?.id) {
+      alert("You must be logged in to use this feature");
+      return;
+    }
+
+    if (isActionLoading) return;
+    setIsActionLoading(true);
+
+    const method = isFavorited ? 'DELETE' : 'POST';
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/users/${user.username}/favourites/${char.id}`, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) {
+        throw new Error("Failed to modify favorites context mapping.");
+      }
+
+      const updatedFavourites: string[] = await response.json();
+      setIsFavorited(updatedFavourites.includes(char.id));
+
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      alert("Could not update favorites");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -88,7 +145,7 @@ export default function CharacterDetailPage() {
     return (
       <div style={{ backgroundColor: '#12131a', color: '#e2e8f0', minHeight: 'calc(100vh - 60px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: 'Segoe UI, Roboto, sans-serif' }}>
         <h1 style={{ color: '#ff4757', fontSize: '2.5rem', marginBottom: '1rem' }}>404</h1>
-        <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Character not found in database index.</p>
+        <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Character not found</p>
         <Link href="/characters" style={{ backgroundColor: '#ff4757', color: '#fff', textDecoration: 'none', padding: '0.6rem 1.2rem', borderRadius: '4px', fontWeight: 600 }}>
           Back to Index
         </Link>
@@ -102,7 +159,7 @@ export default function CharacterDetailPage() {
         
         <div style={{ marginBottom: '2rem' }}>
           <Link href="/characters" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            ◀ Back to Browse Catalog
+            ◀ Back to All Characters
           </Link>
         </div>
 
@@ -116,9 +173,36 @@ export default function CharacterDetailPage() {
             />
             
             <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button style={{ backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '0.95rem' }}>
-                Add to Favorites
+
+              <button
+                onClick={handleFavourites}
+                disabled={isActionLoading}
+                style={{
+                  backgroundColor: isFavorited ? 'rgba(255, 71, 87, 0.08)' : '#ff4757',
+                  color: isFavorited ? '#ff4757' : '#fff',
+                  border: isFavorited ? '1px solid #ff4757' : 'none',
+                  padding: '0.75rem',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  cursor: isActionLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '0.95rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  opacity: isActionLoading ? 0.7 : 1,
+                  transition: 'all 0.2s ease-in-out'
+                }}
+              >
+                {isActionLoading ? (
+                  <span>Updating...</span>
+                ) : isFavorited ? (
+                  <>Remove from Favorites</>
+                ) : (
+                  <>Add to Favorites</>
+                )}
               </button>
+
               <button style={{ backgroundColor: '#1a1c24', color: '#cbd5e1', border: '1px solid #2d313f', padding: '0.75rem', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', fontSize: '0.95rem' }}>
                 Add to Custom List
               </button>
@@ -126,9 +210,6 @@ export default function CharacterDetailPage() {
           </div>
 
           <div style={{ backgroundColor: '#1a1c24', border: '1px solid #2d313f', borderRadius: '8px', padding: '2.5rem' }}>
-            <span style={{ color: '#ff4757', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 'bold', letterSpacing: '1px' }}>
-              Database Record #{char.id}
-            </span>
             <h1 style={{ margin: '0.25rem 0 0.5rem 0', fontSize: '2.5rem', color: '#fff', fontWeight: 700 }}>
               {char.charName}
             </h1>

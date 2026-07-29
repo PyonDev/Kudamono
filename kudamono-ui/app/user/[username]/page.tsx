@@ -1,6 +1,7 @@
 'use client';
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect, use } from 'react';
+import Link from 'next/link';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -12,16 +13,26 @@ interface UserProfile {
   createdAt?: string;
 }
 
+interface Character {
+  id: string;
+  charName: string;
+  series: string;
+  imageUrl: string;
+}
+
 export default function UserProfilePage({ params }: PageProps) {
   const resolvedParams = use(params);
   const targetUsername = decodeURIComponent(resolvedParams.username);
 
   const { user: currentUser, isLoggedIn } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'favorites' | 'settings'>('overview');
-  
+
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [favoriteCharacters, setFavoriteCharacters] = useState<Character[]>([]);
+  const [isFavoritesLoading, setIsFavoritesLoading] = useState<boolean>(false);
 
   const isOwnProfile = isLoggedIn && currentUser?.username?.toLowerCase() === targetUsername.toLowerCase();
 
@@ -52,6 +63,48 @@ export default function UserProfilePage({ params }: PageProps) {
     fetchUserProfile();
   }, [targetUsername]);
 
+  useEffect(() => {
+    if (!profileData?.username) return;
+
+    async function loadFavoritesData() {
+      try {
+        setIsFavoritesLoading(true);
+
+        const favsResponse = await fetch(`http://localhost:8080/api/v1/users/${profileData.username}/favourites`);
+        if (!favsResponse.ok) throw new Error("Failed find favourites");
+
+        const ids: string[] = await favsResponse.json();
+        setFavoriteIds(ids);
+
+        if (ids.length > 0) {
+          const catalogResponse = await fetch(`http://localhost:8080/api/v1/catalog`);
+          if (!catalogResponse.ok) throw new Error("Failed to fetch character");
+
+          const catalogData = await catalogResponse.json();
+
+          const matchedCharacters = catalogData
+            .filter((item: any) => ids.includes(String(item.id)))
+            .map((item: any) => ({
+              id: String(item.id),
+              charName: item.charName || item.name || 'Unknown Character',
+              series: item.series || 'Unknown Series',
+              imageUrl: item.imageUrl || item.image || ''
+            }));
+
+          setFavoriteCharacters(matchedCharacters);
+        } else {
+          setFavoriteCharacters([]);
+        }
+      } catch (err) {
+        console.error("Error aggregating profile favorites layout:", err);
+      } finally {
+        setIsFavoritesLoading(false);
+      }
+    }
+
+    loadFavoritesData();
+  }, [profileData?.username]);
+
   if (isLoading) {
     return (
       <div style={{ backgroundColor: '#13141c', minHeight: 'calc(100vh - 60px)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#94a3b8' }}>
@@ -79,15 +132,14 @@ export default function UserProfilePage({ params }: PageProps) {
               {profileData.username.charAt(0).toUpperCase()}
             </div>
             <h2 style={{ color: '#fff', fontSize: '1.5rem', marginBottom: '0.25rem' }}>{profileData.username}</h2>
-            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-            </p>
+            <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1.5rem' }} />
             
             <div style={{ display: 'flex', justifyContent: 'space-around', borderTop: '1px solid #2d313f', paddingTop: '1.5rem' }}>
               <div>
-                <div style={{ color: '#ff4757', fontWeight: 'bold', fontSize: '1.2rem' }}>0</div>
+                <div style={{ color: '#ff4757', fontWeight: 'bold', fontSize: '1.2rem' }}>{favoriteIds.length}</div>
                 <div style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase' }}>Favorites</div>
               </div>
-              <div style={{ borderLeft: '1px solid #2d313f' }}></div>
+              <div style={{ borderLeft: '1px solid #2d313f' }} />
               <div>
                 <div style={{ color: '#ff4757', fontWeight: 'bold', fontSize: '1.2rem' }}>0</div>
                 <div style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase' }}>Friends</div>
@@ -138,8 +190,41 @@ export default function UserProfilePage({ params }: PageProps) {
 
             {activeTab === 'favorites' && (
               <div>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#ff4757' }}>Favorite Characters</h3>
-                <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Characters bookmarked by {profileData.username} will show up right here.</p>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', color: '#ff4757' }}>Favorite Characters</h3>
+
+                {isFavoritesLoading ? (
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Hydrating chars..</p>
+                ) : favoriteCharacters.length === 0 ? (
+                  <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                    {profileData.username} hasn't favorited any characters yet.
+                  </p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1.5rem' }}>
+                    {favoriteCharacters.map((char) => (
+                      <Link
+                        href={`/characters/${encodeURIComponent(char.charName.replace(/\s+/g, ''))}`}
+                        key={char.id}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <div style={{ backgroundColor: '#13141c', border: '1px solid #2d313f', borderRadius: '6px', overflow: 'hidden', transition: 'transform 0.2s' }}>
+                          <img
+                            src={char.imageUrl}
+                            alt={char.charName}
+                            style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                          />
+                          <div style={{ padding: '0.75rem' }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {char.charName}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {char.series}
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

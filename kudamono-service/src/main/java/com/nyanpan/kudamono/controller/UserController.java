@@ -42,6 +42,11 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{username}/favourites")
+    public ResponseEntity<Set<String>> getFavourites(@PathVariable String username) {
+        return ResponseEntity.ok(userService.getUserFavourites(username));
+    }
+
     @PostMapping("/{username}/favourites/{itemId}")
     public ResponseEntity<Set<String>> addFavourite(@PathVariable String username, @PathVariable String itemId) {
         return userRepository.findByUsernameIgnoreCase(username)

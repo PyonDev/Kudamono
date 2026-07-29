@@ -1,6 +1,8 @@
 package com.nyanpan.kudamono.service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -23,7 +25,14 @@ public class UserService {
         return userRepository.findAll().stream()
         .map(item -> new UserResponse(
             item.getId(),
-            item.getUsername()
+            item.getUsername(),
+            item.getFavourites()
         )).collect(Collectors.toList());
+    }
+
+    public Set<String> getUserFavourites(String username) {
+        return userRepository.findByUsername(username)
+            .map(user -> user.getFavourites())
+            .orElse(Collections.emptySet());
     }
 }
