@@ -11,6 +11,7 @@ interface AuthContextType {
   user: UserSession | null;
   isLoggedIn: boolean;
   isAuthModalOpen: boolean;
+  setUser: React.Dispatch<React.SetStateAction<UserSession | null>>;
   setIsAuthModalOpen: (open: boolean) => void;
   login: (username: string, password: string) => Promise<boolean>;
   register: (username: string, password: string) => Promise<boolean>;
@@ -94,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user,
       isLoggedIn: !!user,
+      setUser,
       isAuthModalOpen,
       setIsAuthModalOpen,
       login,

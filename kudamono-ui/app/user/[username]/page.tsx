@@ -1,6 +1,7 @@
 'use client';
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface PageProps {
@@ -21,20 +22,32 @@ interface Character {
 }
 
 export default function UserProfilePage({ params }: PageProps) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const targetUsername = decodeURIComponent(resolvedParams.username);
 
-  const { user: currentUser, isLoggedIn } = useAuth();
+  const { user: currentUser, isLoggedIn, setUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'favorites' | 'settings'>('overview');
 
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [favoriteCharacters, setFavoriteCharacters] = useState<Character[]>([]);
   const [isFavoritesLoading, setIsFavoritesLoading] = useState<boolean>(false);
 
+  const [newUsernameInput, setNewUsernameInput] = useState<string>('');
+  const [isUpdatingUsername, setIsUpdatingUsername] = useState<boolean>(false);
+  const [usernameUpdateMsg, setUsernameUpdateMsg] = useState<{ text: string; isError: boolean } | null>(null);
+
   const isOwnProfile = isLoggedIn && currentUser?.username?.toLowerCase() === targetUsername.toLowerCase();
+
+  useEffect(() => {
+    if (currentUser?.username) {
+      setNewUsernameInput(currentUser.username);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     async function fetchUserProfile() {
@@ -104,6 +117,75 @@ export default function UserProfilePage({ params }: PageProps) {
 
     loadFavoritesData();
   }, [profileData?.username]);
+
+  const handleUpdateUsername = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUsernameUpdateMsg(null);
+
+    const trimmedNewUsername = newUsernameInput.trim();
+
+    if (!trimmedNewUsername) {
+      setUsernameUpdateMsg({ text: 'Username cannot be empty', isError: true });
+      return;
+    }
+
+    if (trimmedNewUsername.toLowerCase() === targetUsername.toLowerCase()) {
+      setUsernameUpdateMsg({ text: 'Username is identical to current', isError: false });
+      return;
+    }
+
+    try {
+      setIsUpdatingUsername(true);
+
+      const response = await fetch(
+        `http://localhost:8080/api/v1/users/${encodeURIComponent(targetUsername)}/update/${encodeURIComponent(trimmedNewUsername)}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (response.status === 409) {
+        setUsernameUpdateMsg({ text: `Username "${trimmedNewUsername}" is already taken.`, isError: true });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to update username');
+      }
+
+      const updatedUserData = await response.json();
+
+      const storedSession = localStorage.getItem('kudamono_session');
+      if (storedSession) {
+        const parsed = JSON.parse(storedSession);
+        parsed.username = updatedUserData.username || trimmedNewUsername;
+        localStorage.setItem('kudamono_session', JSON.stringify(parsed));
+      }
+
+      setUser((prev) => prev ? { ...prev, username: updatedUserData.username || trimmedNewUsername } : null);
+
+      setUsernameUpdateMsg({ text: 'Username updated successfully! Redirecting...', isError: false });
+
+      setTimeout(() => {
+        router.push(`/user/${encodeURIComponent(trimmedNewUsername)}`);
+        router.refresh();
+      }, 1200);
+
+    } catch (err: any) {
+      console.error('Update Username Error:', err);
+      setUsernameUpdateMsg({ text: err.message || 'An error occurred while updating username.', isError: true });
+    } finally {
+      setIsUpdatingUsername(false);
+    }
+  };
+
+  const handleDeleteAccount = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!confirm('Are you sure you want to delete your account? This action is irreversible.')) {
+      return;
+    }
+  }
 
   if (isLoading) {
     return (
@@ -231,24 +313,57 @@ export default function UserProfilePage({ params }: PageProps) {
             {activeTab === 'settings' && isOwnProfile && (
               <div>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#ff4757' }}>Account Settings</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '400px', marginTop: '1rem' }}>
+
                   <div>
                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem' }}>User Identification Key</label>
-                    <input type="text" readOnly value={currentUser?.id || ''} style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem', fontFamily: 'monospace' }} />
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem', marginTop: '0.5rem' }}>Update Username</label>
-                    <input type="text" defaultValue={currentUser?.username || ''} style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem', fontFamily: 'monospace' }} />
-                    <button style={{ marginTop: '0.5rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>Update Username</button>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem', marginTop: '0.5rem' }}>Update Password</label>
-                    <input type="password" placeholder="Enter new password" style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem', fontFamily: 'monospace' }} />
-                    <input type="password" placeholder="Confirm new password" style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem', fontFamily: 'monospace' }} />
-                    <button style={{ marginTop: '0.5rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>Update Password</button>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem', marginTop: '0.5rem' }}>Update Profile Picture</label>
-                    <input type="file" accept="image/*" style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem', fontFamily: 'monospace' }} />
-                    <button style={{ marginTop: '0.5rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>Update Profile Picture</button>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem', marginTop: '0.5rem' }}>Delete Account</label>
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#ff6b81', marginBottom: '0.4rem' }}>Warning: This action is irreversible. Account deletions are permanent.</span>
-                    <button style={{ marginTop: '0.5rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>Delete Account</button>
+                    <input type="text" readOnly value={currentUser?.id || profileData.id || ''} style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem', fontFamily: 'monospace' }} />
                   </div>
+
+                  <form onSubmit={handleUpdateUsername}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Update Username</label>
+                    <input
+                      type="text"
+                      value={newUsernameInput}
+                      onChange={(e) => setNewUsernameInput(e.target.value)}
+                      disabled={isUpdatingUsername}
+                      style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#e2e8f0', outline: 'none', fontSize: '0.85rem' }}
+                    />
+
+                    {usernameUpdateMsg && (
+                      <span style={{ display: 'block', fontSize: '0.8rem', marginTop: '0.4rem', color: usernameUpdateMsg.isError ? '#ff4757' : '#22c55e' }}>
+                        {usernameUpdateMsg.text}
+                      </span>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={isUpdatingUsername}
+                      style={{ marginTop: '0.75rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: isUpdatingUsername ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 600, opacity: isUpdatingUsername ? 0.7 : 1 }}
+                    >
+                      {isUpdatingUsername ? 'Updating...' : 'Update Username'}
+                    </button>
+                  </form>
+
+                  <div style={{ borderTop: '1px solid #2d313f', paddingTop: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Update Password</label>
+                    <input type="password" placeholder="Enter new password" style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem', marginBottom: '0.5rem' }} />
+                    <input type="password" placeholder="Confirm new password" style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem' }} />
+                    <button style={{ marginTop: '0.75rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>Update Password</button>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #2d313f', paddingTop: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Update Profile Picture</label>
+                    <input type="file" accept="image/*" style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem' }} />
+                    <button style={{ marginTop: '0.75rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>Update Profile Picture</button>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #2d313f', paddingTop: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#ff4757', fontWeight: 'bold', marginBottom: '0.2rem' }}>Delete Account</label>
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#ff6b81', marginBottom: '0.6rem' }}>Warning: This action is irreversible. Account deletions are permanent.</span>
+                    <button style={{ backgroundColor: 'rgba(255, 71, 87, 0.15)', color: '#ff4757', border: '1px solid #ff4757', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Delete Account</button>
+                  </div>
+
                 </div>
               </div>
             )}

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,6 +41,18 @@ public class UserController {
         return userRepository.findByUsernameIgnoreCase(username)
                 .map(user -> ResponseEntity.ok(user))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{username}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String username) {
+        userService.deleteUser(username);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{username}/update/{newUsername}")
+    public ResponseEntity<User> updateUserName(@PathVariable String username, @PathVariable String newUsername) {
+        User updatedUser = userService.updateUserName(username, newUsername);
+        return ResponseEntity.ok(updatedUser);
     }
 
     @GetMapping("/{username}/favourites")
