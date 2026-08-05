@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,12 +18,12 @@ import com.nyanpan.kudamono.repository.UserRepository;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
-    
 
     public List<UserResponse> getAllCatalogItems() {
         return userRepository.findAll().stream()
@@ -48,6 +49,13 @@ public class UserService {
         }
         user.setUsername(newUsername);
         return userRepository.save(user);
+    }
+
+    public void updatePassword(String username, String newPassword) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     public void deleteUser(String username) {

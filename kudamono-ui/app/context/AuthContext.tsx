@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || 'Registration failed');
+        alert(data.message || data.error || 'Registration failed');
         return false;
       }
 

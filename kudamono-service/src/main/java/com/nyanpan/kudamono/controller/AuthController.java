@@ -35,6 +35,10 @@ public class AuthController {
         if (userRepository.existsByUsername(username)) {
             return ResponseEntity.badRequest().body(Map.of("error", "Error: Username is already taken!"));
         }
+
+        if (username.contains(" ")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Error: Username cannot contain spaces"));
+        }
         
         User user = new User(username, passwordEncoder.encode(password), Collections.emptySet(), Collections.singleton("ROLE_USER"));
         userRepository.save(user);

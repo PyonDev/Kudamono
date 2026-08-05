@@ -26,7 +26,7 @@ export default function UserProfilePage({ params }: PageProps) {
   const resolvedParams = use(params);
   const targetUsername = decodeURIComponent(resolvedParams.username);
 
-  const { user: currentUser, isLoggedIn, setUser } = useAuth();
+  const { user: currentUser, isLoggedIn, logout, setUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'favorites' | 'settings'>('overview');
 
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
@@ -40,6 +40,14 @@ export default function UserProfilePage({ params }: PageProps) {
   const [newUsernameInput, setNewUsernameInput] = useState<string>('');
   const [isUpdatingUsername, setIsUpdatingUsername] = useState<boolean>(false);
   const [usernameUpdateMsg, setUsernameUpdateMsg] = useState<{ text: string; isError: boolean } | null>(null);
+
+  const [newPasswordInput, setNewPasswordInput] = useState<string>('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState<string>('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState<boolean>(false);
+  const [passwordUpdateMsg, setPasswordUpdateMsg] = useState<{ text: string; isError: boolean } | null>(null);
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const isOwnProfile = isLoggedIn && currentUser?.username?.toLowerCase() === targetUsername.toLowerCase();
 
@@ -180,10 +188,68 @@ export default function UserProfilePage({ params }: PageProps) {
     }
   };
 
-  const handleDeleteAccount = async (e: React.FormEvent<HTMLFormElement>) => {
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!confirm('Are you sure you want to delete your account? This action is irreversible.')) {
+    setPasswordUpdateMsg(null);
+
+    if (!newPasswordInput || !confirmPasswordInput) {
+      setPasswordUpdateMsg({ text: 'Both password fields are required.', isError: true });
       return;
+    }
+
+    if (newPasswordInput !== confirmPasswordInput) {
+      setPasswordUpdateMsg({ text: 'Passwords do not match.', isError: true });
+      return;
+    }
+
+    try {
+      setIsUpdatingPassword(true);
+      const response = await fetch(`http://localhost:8080/api/v1/users/${encodeURIComponent(targetUsername)}/update-password/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword: newPasswordInput })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update password');
+      }
+
+      setPasswordUpdateMsg({ text: 'Password updated successfully!', isError: false });
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+    } catch (err: any) {
+      console.error('Update Password Error:', err);
+      setPasswordUpdateMsg({ text: err.message || 'An error occurred while updating password.', isError: true });
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
+    setDeleteError(null);
+
+    const confirmation = window.confirm('Are you sure you want to delete your account? This action is irreversible.');
+    if (!confirmation) return;
+    
+    try {
+      setIsDeleting(true);
+      const response = await fetch(`http://localhost:8080/api/v1/users/${encodeURIComponent(targetUsername)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
+
+      logout();
+      router.push('/');
+    } catch (err: any) {
+      console.error('Delete Account Error:', err);
+      setDeleteError(err.message || 'An error occurred while deleting the account.');
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -347,9 +413,36 @@ export default function UserProfilePage({ params }: PageProps) {
 
                   <div style={{ borderTop: '1px solid #2d313f', paddingTop: '1rem' }}>
                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Update Password</label>
-                    <input type="password" placeholder="Enter new password" style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem', marginBottom: '0.5rem' }} />
-                    <input type="password" placeholder="Confirm new password" style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#64748b', outline: 'none', fontSize: '0.85rem' }} />
-                    <button style={{ marginTop: '0.75rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}>Update Password</button>
+                    <form onSubmit={handleUpdatePassword}>
+                      <input
+                        type="password"
+                        placeholder="Enter new password"
+                        value={newPasswordInput}
+                        onChange={(e) => setNewPasswordInput(e.target.value)}
+                        disabled={isUpdatingPassword}
+                        style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#e2e8f0', outline: 'none', fontSize: '0.85rem', marginBottom: '0.5rem' }}
+                      />
+                      <input
+                        type="password"
+                        placeholder="Confirm new password"
+                        value={confirmPasswordInput}
+                        onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                        disabled={isUpdatingPassword}
+                        style={{ width: '100%', padding: '0.65rem 0.8rem', borderRadius: '4px', border: '1px solid #2d313f', backgroundColor: '#13141c', color: '#e2e8f0', outline: 'none', fontSize: '0.85rem' }}
+                      />
+                      {passwordUpdateMsg && (
+                        <span style={{ display: 'block', fontSize: '0.8rem', marginTop: '0.4rem', color: passwordUpdateMsg.isError ? '#ff4757' : '#22c55e' }}>
+                          {passwordUpdateMsg.text}
+                        </span>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={isUpdatingPassword}
+                        style={{ marginTop: '0.75rem', backgroundColor: '#ff4757', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: isUpdatingPassword ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 600, opacity: isUpdatingPassword ? 0.7 : 1 }}
+                      >
+                        {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                      </button>
+                    </form>
                   </div>
 
                   <div style={{ borderTop: '1px solid #2d313f', paddingTop: '1rem' }}>
@@ -361,7 +454,18 @@ export default function UserProfilePage({ params }: PageProps) {
                   <div style={{ borderTop: '1px solid #2d313f', paddingTop: '1rem' }}>
                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#ff4757', fontWeight: 'bold', marginBottom: '0.2rem' }}>Delete Account</label>
                     <span style={{ display: 'block', fontSize: '0.75rem', color: '#ff6b81', marginBottom: '0.6rem' }}>Warning: This action is irreversible. Account deletions are permanent.</span>
-                    <button style={{ backgroundColor: 'rgba(255, 71, 87, 0.15)', color: '#ff4757', border: '1px solid #ff4757', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>Delete Account</button>
+                    {deleteError && (
+                      <span style={{ display: 'block', fontSize: '0.75rem', color: '#ff4757', marginBottom: '0.6rem' }}>
+                        {deleteError}
+                      </span>
+                    )}
+                    <button 
+                      style={{ backgroundColor: 'rgba(255, 71, 87, 0.15)', color: '#ff4757', border: '1px solid #ff4757', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                      disabled={isDeleting}
+                      onClick={handleDeleteAccount}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete Account'}
+                    </button>
                   </div>
 
                 </div>

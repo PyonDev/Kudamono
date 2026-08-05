@@ -1,6 +1,7 @@
 package com.nyanpan.kudamono.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,6 +55,13 @@ public class UserController {
     public ResponseEntity<User> updateUserName(@PathVariable String username, @PathVariable String newUsername) {
         User updatedUser = userService.updateUserName(username, newUsername);
         return ResponseEntity.ok(updatedUser);
+    }
+
+    @PutMapping("/{username}/update-password/")
+    public ResponseEntity<Void> updatePassword(@PathVariable String username, @RequestBody Map<String, String> request) {
+        String newPassword = request.get("newPassword");
+        userService.updatePassword(username, newPassword);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{username}/favourites")
