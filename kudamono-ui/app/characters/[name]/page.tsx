@@ -219,21 +219,6 @@ export default function CharacterDetailPage() {
 
             <hr style={{ border: 'none', borderTop: '1px solid #2d313f', margin: '2rem 0' }} />
 
-            <h3 style={{ color: '#fff', fontSize: '1.1rem', margin: '0 0 1rem 0' }}>Attributes</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', backgroundColor: '#13141c', padding: '1.25rem', borderRadius: '6px', border: '1px solid #2d313f', marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
-                <span style={{ color: '#64748b' }}>Affiliation:</span>
-                <span style={{ fontWeight: 500 }}>Main Character</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
-                <span style={{ color: '#64748b' }}>Popularity:</span>
-                <span style={{ color: '#eab308', fontWeight: 'bold' }}>100</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem' }}>
-                <span style={{ color: '#64748b' }}>Status:</span>
-                <span style={{ color: '#22c55e', fontWeight: 500 }}>Verified</span>
-              </div>
-            </div>
 
             <h3 style={{ color: '#fff', fontSize: '1.1rem', margin: '0 0 0.75rem 0' }}>Tags</h3>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

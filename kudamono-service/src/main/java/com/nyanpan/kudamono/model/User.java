@@ -1,8 +1,10 @@
 package com.nyanpan.kudamono.model;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -20,13 +22,17 @@ public class User {
     private Set<String> favourites = new HashSet<>();
     private Set<String> roles;
 
+    @CreatedDate
+    private Instant createdAt;
+
     public User() {}
 
-    public User(String username, String password, Set<String> favourites, Set<String> roles) {
+    public User(String username, String password, Set<String> favourites, Set<String> roles, Instant createdAt) {
         this.username = username;
         this.password = password;
         this.favourites = favourites;
         this.roles = roles;
+        this.createdAt = createdAt;
     }
 
     public String getId() {
@@ -59,6 +65,10 @@ public class User {
 
     public void setFavourites(Set<String> favourites) {
         this.favourites = favourites;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
 }

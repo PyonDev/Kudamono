@@ -30,7 +30,8 @@ public class UserService {
         .map(item -> new UserResponse(
             item.getId(),
             item.getUsername(),
-            item.getFavourites()
+            item.getFavourites(),
+            item.getCreatedAt()
         )).collect(Collectors.toList());
     }
 
